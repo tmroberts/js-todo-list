@@ -19,8 +19,8 @@
 
     <script type="text/html" id="list-template">
       <li><%= text %>
-        <img id = "delete-button" src="trash.svg"/>
-        <img id = "edit-button" src="edit.svg"/>
+        <img data-id="<%=taskId%>" class = "delete-button" src="trash.svg"/>
+        <img class = "edit-button" src="edit.svg"/>
       </li>
     </script>
 

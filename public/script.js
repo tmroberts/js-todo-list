@@ -10,28 +10,30 @@ if (this.ToDo === undefined) this.ToDo = {};
 
   function createListItem () {
     var value = $userInput.val();
-    var templateHtml = $('#list-template').html();
-    var templateFunc = _.template(templateHtml);
-    var html = templateFunc(
-      {
-        text: $userInput.val()
-      }
-    );
 
-    $userList.append(html);
     console.log('This is the list item: ', value);
 
     var promise = $.ajax({
       url   : '/api/todo',
       method: 'POST',
       data  : {
-        text: $userInput.val(),
+        text: value,
         isComplete: false
       }
     });
 
     promise.done(function (data) {
-      console.log('This is the result: ',data);
+      //console.log('This is the result: ',data);
+
+      var templateHtml = $('#list-template').html();
+      var templateFunc = _.template(templateHtml);
+      var html = templateFunc(
+        {
+          text: value,
+          taskId: data.id
+        }
+      );
+      $userList.append(html);
     });
 
     $userInput.val(' ');
@@ -39,9 +41,9 @@ if (this.ToDo === undefined) this.ToDo = {};
   }
 
   function getInput(evt) {
-    //$userList.empty();
     if(evt.keyCode === 13) {
       createListItem();
+      //$userList.empty();
     }
   }
 
@@ -49,23 +51,27 @@ if (this.ToDo === undefined) this.ToDo = {};
   function start() {
 
     // Initial display: (GET)
-    //
-    // var promise = $.ajax({
-    //   url: '/api/todo',
-    //   method: 'GET',
-    //   data: {}
-    // });
-    //
-    // promise.done(function (data) {
-    //   console.log('This is data frao the API: ', data);
-    // });
+    var promise = $.ajax({
+       url: '/api/todo',
+       method: 'GET',
 
-    // When I get data back, loop thru the array of objects...
-    // in theory . . . something like :
-    // for(var i = 0; i < data.list.length; i++) {
-    //
-    // }
+     });
 
+     promise.done(function (data) {
+       console.log('This is data from the API: ', data);
+
+      for(var i = 0; i < data.list.length; i++) {
+            var templateHtml = $('#list-template').html();
+            var templateFunc = _.template(templateHtml);
+            var html = templateFunc(
+              {text: data.list[i].text,
+              taskId: data.list[i].id
+            }
+            );
+            //put html on the pg
+            $('.list').append(html);
+          }
+    });
     // Handle user input
     $userInput.on('keyup', getInput);
     $userInput.focus();
