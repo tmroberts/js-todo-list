@@ -10,7 +10,6 @@ if (this.ToDo === undefined) this.ToDo = {};
 
   function createListItem () {
     var value = $userInput.val();
-
     console.log('This is the list item: ', value);
 
     var promise = $.ajax({
@@ -36,9 +35,30 @@ if (this.ToDo === undefined) this.ToDo = {};
       $userList.append(html);
     });
 
-    $userInput.val(' ');
+    $userInput.val('');
 
   }
+
+  function deleteListItem(evt) {
+    var $target = $(evt.target);
+    var id = $target.data('id');
+    console.log('Delete button active!');
+    console.log('Here is the target: ', id)
+    console.log('Here is the id: ', id)
+    // ajax call
+    $.ajax({
+     url: '/api/todo/' + id,
+     method: 'DELETE'
+    });
+    //
+    // DELETE is working;
+    // DISPLAY is not updating, must ctl-r to refresh
+    // Add Eric's server.js code ==> api.js ???
+
+    $target.parent().remove();
+
+  }
+
 
   function getInput(evt) {
     if(evt.keyCode === 13) {
@@ -50,31 +70,36 @@ if (this.ToDo === undefined) this.ToDo = {};
 
   function start() {
 
-    // Initial display: (GET)
-    var promise = $.ajax({
-       url: '/api/todo',
-       method: 'GET',
+  // Initial display: (GET)
+  var promise = $.ajax({
+    url: '/api/todo',
+    method: 'GET',
 
-     });
+  });
 
-     promise.done(function (data) {
-       console.log('This is data from the API: ', data);
+  promise.done(function (data) {
+    console.log('This is data from the API: ', data);
 
-      for(var i = 0; i < data.list.length; i++) {
-            var templateHtml = $('#list-template').html();
-            var templateFunc = _.template(templateHtml);
-            var html = templateFunc(
-              {text: data.list[i].text,
-              taskId: data.list[i].id
-            }
-            );
-            //put html on the pg
-            $('.list').append(html);
+    for(var i = 0; i < data.list.length; i++) {
+          var templateHtml = $('#list-template').html();
+          var templateFunc = _.template(templateHtml);
+          var html = templateFunc(
+            {text: data.list[i].text,
+            taskId: data.list[i].id
           }
-    });
-    // Handle user input
-    $userInput.on('keyup', getInput);
-    $userInput.focus();
+          );
+          //put html on the pg
+          $('.list').append(html);
+    }
+  });
+
+  // Handle user input
+  $userInput.on('keyup', getInput);
+  $userInput.focus();
+
+  // Listener for Delete button
+  var $list = $('.list');
+    $list.on('click', '.delete-button', deleteListItem);
   }
 
   context.start = start;
