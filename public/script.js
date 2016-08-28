@@ -50,15 +50,33 @@ if (this.ToDo === undefined) this.ToDo = {};
      url: '/api/todo/' + id,
      method: 'DELETE'
     });
-    //
-    // DELETE is working;
-    // DISPLAY is not updating, must ctl-r to refresh
-    // Add Eric's server.js code ==> api.js ???
 
     $target.parent().remove();
 
   }
 
+//=========== Adding mark completed feature
+
+function markCompleted(evt) {
+  console.log('Inside markCompleted');
+    var $target = $(evt.target);
+    var id  = $target.data('id');
+    var text = $target.data('text');
+
+    $.ajax({
+      url: '/api/todo/' + id,
+      method: 'PUT',
+      data: {
+        text: text,
+        id: id,
+        isComplete: true
+      }
+    });
+
+    $target.parent().addClass('mark-completed');
+  }
+
+//===========
 
   function getInput(evt) {
     if(evt.keyCode === 13) {
@@ -73,20 +91,30 @@ if (this.ToDo === undefined) this.ToDo = {};
   // Initial display: (GET)
   var promise = $.ajax({
     url: '/api/todo',
-    method: 'GET',
-
+    method: 'GET'
   });
 
   promise.done(function (data) {
     console.log('This is data from the API: ', data);
 
     for(var i = 0; i < data.list.length; i++) {
+          // mark completed
+          var className = '';
+          var isComplete = data.list[i].isComplete
+          console.log('This is isComplete: ', isComplete);
+
+          if (isComplete == 'true') {
+            className = 'mark-completed';
+          }
+          //
           var templateHtml = $('#list-template').html();
           var templateFunc = _.template(templateHtml);
           var html = templateFunc(
-            {text: data.list[i].text,
-            taskId: data.list[i].id
-          }
+            {
+              text: data.list[i].text,
+              taskId: data.list[i].id,
+              className: data.list[i].className
+            }
           );
           //put html on the pg
           $('.list').append(html);
@@ -100,6 +128,7 @@ if (this.ToDo === undefined) this.ToDo = {};
   // Listener for Delete button
   var $list = $('.list');
     $list.on('click', '.delete-button', deleteListItem);
+    $list.on('click', markCompleted);
   }
 
   context.start = start;

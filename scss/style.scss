@@ -29,6 +29,9 @@ h1 {
 	padding: 5px;
 }
 
+.mark-completed {
+  text-decoration: line-through;
+}
 
 .edit-button, .delete-button {
   border: 1px solid darkgray;
