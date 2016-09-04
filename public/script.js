@@ -6,11 +6,11 @@ if (this.ToDo === undefined) this.ToDo = {};
   var $userInput = $('#item-input');
   console.log('This is $userInput: ', $userInput);
   var $userList = $('.list');
-
+  var className = '';
 
   function createListItem () {
     var value = $userInput.val();
-    console.log('This is the list item: ', value);
+    console.log('This is the list item: ', $userInput.val());
 
     var promise = $.ajax({
       url   : '/api/todo',
@@ -23,13 +23,13 @@ if (this.ToDo === undefined) this.ToDo = {};
 
     promise.done(function (data) {
       //console.log('This is the result: ',data);
-
       var templateHtml = $('#list-template').html();
       var templateFunc = _.template(templateHtml);
       var html = templateFunc(
         {
           text: value,
-          taskId: data.id
+          taskId: data.id,
+          isComplete: false
         }
       );
       $userList.append(html);
@@ -40,43 +40,47 @@ if (this.ToDo === undefined) this.ToDo = {};
   }
 
   function deleteListItem(evt) {
+    evt.stopPropagation();
     var $target = $(evt.target);
-    var id = $target.data('id');
-    console.log('Delete button active!');
-    console.log('Here is the target: ', id)
-    console.log('Here is the id: ', id)
+    var id = $target.parent().data('id');
+    //var id = $target.parent().data('id');
+    //var text = $target.data('text');
+    console.log('This is evt.target: ', evt.target);
+    console.log('Here is the target: ', id);
+    console.log('Here is the id: ', id);
     // ajax call
     $.ajax({
      url: '/api/todo/' + id,
-     method: 'DELETE'
+     method: 'DELETE',
     });
-
     $target.parent().remove();
-
   }
 
-//=========== Adding mark completed feature
+  //=========== Adding mark completed feature
 
-function markCompleted(evt) {
-  console.log('Inside markCompleted');
-    var $target = $(evt.target);
-    var id  = $target.data('id');
-    var text = $target.data('text');
+  function markCompleted(evt) {
+    evt.stopPropagation();
+    console.log('Inside markCompleted');
+      var $target = $(evt.target);
+      var id  = $target.data('id');//looks for data-id
+      var text = $target.data('text');//looks for data-text
 
-    $.ajax({
-      url: '/api/todo/' + id,
-      method: 'PUT',
-      data: {
-        text: text,
-        id: id,
-        isComplete: true
-      }
-    });
+      $.ajax({
+        url: '/api/todo/' + id,
+        method: 'PUT',
+        data: {
+          text: text,
+          // need className?????
+          // className: ???
+          isComplete: true
+        }
+      });
 
-    $target.parent().addClass('mark-completed');
+      //$target.parent().addClass('mark-completed');
+      $target.addClass('mark-completed');
   }
 
-//===========
+  //===========
 
   function getInput(evt) {
     if(evt.keyCode === 13) {
@@ -88,47 +92,46 @@ function markCompleted(evt) {
 
   function start() {
 
-  // Initial display: (GET)
-  var promise = $.ajax({
-    url: '/api/todo',
-    method: 'GET'
-  });
+    // Initial display: (GET)
+    var promise = $.ajax({
+      url: '/api/todo'
+    });
 
-  promise.done(function (data) {
-    console.log('This is data from the API: ', data);
+    promise.done(function (data) {
+      //console.log('This is data from the API: ', data);
 
-    for(var i = 0; i < data.list.length; i++) {
-          // mark completed
-          var className = '';
-          var isComplete = data.list[i].isComplete
-          console.log('This is isComplete: ', isComplete);
+      for(var i = 0; i < data.list.length; i++) {
+        // mark completed
+        //var className = '';
+        var isComplete = data.list[i].isComplete
+        //console.log('This is isComplete: ', isComplete);
 
-          if (isComplete == 'true') {
-            className = 'mark-completed';
+        if (isComplete == 'true') {
+          className = 'mark-completed';
+        }
+        //
+        var templateHtml = $('#list-template').html();
+        var templateFunc = _.template(templateHtml);
+        var html = templateFunc(
+          {
+            text: data.list[i].text,
+            taskId: data.list[i].taskId,
+            className: data.list[i].className
           }
-          //
-          var templateHtml = $('#list-template').html();
-          var templateFunc = _.template(templateHtml);
-          var html = templateFunc(
-            {
-              text: data.list[i].text,
-              taskId: data.list[i].id,
-              className: data.list[i].className
-            }
-          );
-          //put html on the pg
-          $('.list').append(html);
-    }
-  });
+        );
+        //put html on the pg
+        $('.list').append(html);
+      }
+    });
 
-  // Handle user input
-  $userInput.on('keyup', getInput);
-  $userInput.focus();
+    // Handle user input
+    $userInput.on('keyup', getInput);
+    $userInput.focus();
 
-  // Listener for Delete button
-  var $list = $('.list');
+    // Listener for Delete button
+    var $list = $('.list');
     $list.on('click', '.delete-button', deleteListItem);
-    $list.on('click', markCompleted);
+    $list.on('click', 'li', markCompleted);
   }
 
   context.start = start;
